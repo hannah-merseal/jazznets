@@ -2,6 +2,7 @@
 Data cleaning &amp; analysis pipeline for jazznets project
 
 ## Directory
+
 ### Functions
 1. JNfilerename - mass convert participant files to participant IDs. DO NOT use unless at very beginning of project - will delete all prior files in directory.
 
@@ -12,3 +13,11 @@ Data cleaning &amp; analysis pipeline for jazznets project
 4. cleanup - cleanup pipeline + calculating means and creating a master file of all trials
 
 5. plotmeans - plotting means using ggplot2
+
+6. JNanovas - scripts for repeated measures ANOVA and post-hoc analysis
+
+### Pilot Data
+*Participant data files are not stored in this repository; you will need to save the raw data locally!*
+
+### Pilot Results
+Results document, plots
