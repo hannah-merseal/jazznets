@@ -3,6 +3,9 @@ Data cleaning &amp; analysis pipeline for jazznets project
 
 ## Directory
 
+### Task
+Semantic choice task for node pairs extracted from the Weimar Jazz Database. Also hosted on Gitlab for deployment to Pavlovia.
+
 ### Functions
 1. JNfilerename - mass convert participant files to participant IDs. DO NOT use unless at very beginning of project - will delete all prior files in directory.
 
