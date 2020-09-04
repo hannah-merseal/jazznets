@@ -5,6 +5,7 @@ library(nlme)
 library(ez)
 library(emmeans)
 library(lme4)
+library(lmerTest)
 
 JNmaster <- read.csv("pilot data/master_info_excludes/master.csv")
 surveyAll <- read.csv("pilot data/JNPilotSurvey.csv")
@@ -35,9 +36,6 @@ survey <- surveyAll %>% dplyr::select(participant, musicianYN, EmotionalContent,
 #MERGE
 master <- merge(JNmaster, survey)
 
-# do musicians and non-musicians use different strategies? 
-# w/ emotionalContent, contour, dissonance, intervalVariety, intervalSize, impliedHarmony
-
 #lme covariates for response:
 # overall listening hours
 # jazz listening hours
@@ -47,6 +45,16 @@ master <- merge(JNmaster, survey)
 # playing hours
 # imp hours
 # percent imp
+lmm.kitchensink <- lmer(response ~ distance*musicianYN + (1 | participant), data = master)
+summary(lmm.kitchensink)
+
+#create musician and non sets
+musicians <- master %>% dplyr::filter(musicianYN == 1)
+nonmusicians <- master %>% dplyr::filter(musicianYN == 0)
+
+
+
+
 
 #then do it again for RT
 
