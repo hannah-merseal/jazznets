@@ -45,8 +45,8 @@ master <- merge(JNmaster, survey)
 # playing hours
 # imp hours
 # percent imp
-lmm.kitchensink <- lmer(response ~ distance*musicianYN + (1 | participant), data = master)
-summary(lmm.kitchensink)
+lmm.basic <- lmer(response ~ distance*musicianYN + (1 | participant), data = master)
+summary(lmm.basic)
 
 #create musician and non sets
 musicians <- master %>% dplyr::filter(musicianYN == 1)
