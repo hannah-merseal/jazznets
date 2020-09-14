@@ -36,25 +36,32 @@ survey <- surveyAll %>% dplyr::select(participant, musicianYN, EmotionalContent,
 #MERGE
 master <- merge(JNmaster, survey)
 
-#lme covariates for response:
-# overall listening hours
-# jazz listening hours
-# instrument
-# instrument proficiency
-# improvisation proficiency
-# playing hours
-# imp hours
-# percent imp
+#lme for response:
+# overall listening hours - hoursWeekListen W
+# jazz listening hours - hoursWeekListenJazz W
+# primary instrument proficiency - primaryProficiency normal W*
+# improvisation proficiency - impProficiency W
+# playing hours - playHoursNow W
+# improv hours - impHoursNow W*
+# percent improv played - percentImp W
 lmm.basic <- lmer(response ~ distance*musicianYN + (1 | participant), data = master)
 summary(lmm.basic)
+
+#
+#do I want musician to be another random effect instead of this? 
+#below: the above music effects are only collected for the musician set - just run these on the musician model?
 
 #create musician and non sets
 musicians <- master %>% dplyr::filter(musicianYN == 1)
 nonmusicians <- master %>% dplyr::filter(musicianYN == 0)
 
+#musician
+lmm.mus <- lmer(response ~ distance + (1|participant), data = musicians)
+summary(lmm.mus)
 
-
-
+#non
+lmm.non <- lmer(response ~ distance + (1|participant), data = nonmusicians)
+summary(lmm.non)
 
 #then do it again for RT
 
@@ -64,5 +71,5 @@ nonmusicians <- master %>% dplyr::filter(musicianYN == 0)
 #for 6, 10 - remove trials with response = 1
 #THEN look at RT
 
-#ggplot for response (don't forget error bars)
+#ggplot for response 
 #ggplot for RT (just correct trials)
