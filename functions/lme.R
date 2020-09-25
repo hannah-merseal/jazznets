@@ -33,6 +33,7 @@ survey <- surveyAll %>% dplyr::select(participant, musicianYN, EmotionalContent,
          playHoursNow = PlayHoursNow,
          impHoursNow = ImpHoursNow,
          percentImp = PercentImp)
+
 #MERGE
 master <- merge(JNmaster, survey)
 
@@ -53,8 +54,10 @@ summary(log.modelC)
 log.modelA <- glm(response ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = master, family = "binomial")
 summary(log.modelA)
 anova(log.modelC, log.modelA, test = "Chisq")
+
 #converting log odds into odds ratio
 exp(cbind(OR = coef(log.modelA), confint(log.modelA)))
+
 #confusion table
 logtable <-  data.frame(observed = master$response,
                         predicted = ifelse(fitted(log.modelA) > .5, 1, 0))
@@ -73,12 +76,27 @@ summary(non.int)
 exp(cbind(OR = coef(non.int), confint(non.int)))
 
 #then do it again for RT
+masterCorr <- read.csv("pilot data/master_info_excludes/correctTrials.csv")
 
-#up through distance 4 the stimuli overlap
-#between 5 and 6 no overlap - there is a difference!
-#for 1, 2, 3, 4 - remove trials with response = 0
-#for 6, 10 - remove trials with response = 1
-#THEN look at RT
+modelC.RT <- lm(RT ~ 1, data = masterCorr)
+summary(modelC.RT)
+modelA.RT <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorr)
+summary(modelA.RT)
+anova(modelC.RT, modelA.RT)
 
 #ggplot for response (+ error)
+respPlot <- ggplot(master,
+                   aes(x = as.factor(distance),
+                       y = response,
+                       group = musicianYN,
+                       color = as.factor(musicianYN))) +
+  stat_summary(fun.y = "mean", geom = "point") +
+  stat_summary(fun.y = "mean", geom = "line") +
+  stat_summary(fun.data = "mean_se", geom = "errorbar") +
+  labs(x = "Distance",
+       y = "Mean Response",
+       title = "Mean Response for Distance, Musicians vs. Nons") +
+  scale_color_manual(labels = c("Nonmusicians", "Musicians"), values = c("orange", "purple")) +
+  guides(color = guide_legend("Group"))
+respPlot
 #ggplot for RT (just correct trials)
