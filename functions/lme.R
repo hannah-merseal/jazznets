@@ -36,7 +36,7 @@ survey <- surveyAll %>% dplyr::select(participant, musicianYN, EmotionalContent,
 #MERGE
 master <- merge(JNmaster, survey)
 
-#lme for response:
+# predictors for response:
 # overall listening hours - hoursWeekListen W
 # jazz listening hours - hoursWeekListenJazz W
 # primary instrument proficiency - primaryProficiency normal W*
@@ -44,24 +44,33 @@ master <- merge(JNmaster, survey)
 # playing hours - playHoursNow W
 # improv hours - impHoursNow W*
 # percent improv played - percentImp W
-lmm.basic <- lmer(response ~ distance*musicianYN + (1 | participant), data = master)
-summary(lmm.basic)
+#lmm.basic <- lmer(response ~ distance*musicianYN + impHoursNow + (1 | participant), data = master)
+#summary(lmm.basic)
 
-#
-#do I want musician to be another random effect instead of this? 
-#below: the above music effects are only collected for the musician set - just run these on the musician model?
+#logistic regression with chisq
+log.modelC <- glm(response ~ 1, data = master, family = "binomial")
+summary(log.modelC)
+log.modelA <- glm(response ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = master, family = "binomial")
+summary(log.modelA)
+anova(log.modelC, log.modelA, test = "Chisq")
+#converting log odds into odds ratio
+exp(cbind(OR = coef(log.modelA), confint(log.modelA)))
+#confusion table
+logtable <-  data.frame(observed = master$response,
+                        predicted = ifelse(fitted(log.modelA) > .5, 1, 0))
+xtabs(~ observed + predicted, data = logtable)
 
-#create musician and non sets
+#musician interaction + musician variables
 musicians <- master %>% dplyr::filter(musicianYN == 1)
+musician.int <- glm(response ~ distance, data = musicians, family = "binomial")
+summary(musician.int)
+exp(cbind(OR = coef(musician.int), confint(musician.int)))
+
+#nonmusician interaction
 nonmusicians <- master %>% dplyr::filter(musicianYN == 0)
-
-#musician
-lmm.mus <- lmer(response ~ distance + (1|participant), data = musicians)
-summary(lmm.mus)
-
-#non
-lmm.non <- lmer(response ~ distance + (1|participant), data = nonmusicians)
-summary(lmm.non)
+non.int <- glm(response ~ distance, data = nonmusicians, family = "binomial")
+summary(non.int)
+exp(cbind(OR = coef(non.int), confint(non.int)))
 
 #then do it again for RT
 
@@ -71,5 +80,5 @@ summary(lmm.non)
 #for 6, 10 - remove trials with response = 1
 #THEN look at RT
 
-#ggplot for response 
+#ggplot for response (+ error)
 #ggplot for RT (just correct trials)
