@@ -126,10 +126,11 @@ predicted.values$distance.factor <- factor(predicted.values$distance,
 predicted.values$musicianYN.factor <- factor(predicted.values$musicianYN,
                                              levels = c(0, 1),
                                              labels = c("Non-musicians", "Musicians"))
-RTplot <- ggplot(masterCorr, aes(x = distance, y = RT)) +
-  geom_jitter(alpha = .3, color = "gray50", pch = 21, size = 1) +
+RTplot <- ggplot(predicted.values, aes(x = distance, y = fit)) +
+  geom_jitter(data = masterCorr, aes(x = distance, y = RT), alpha = .3, color = "gray50", pch = 21, size = 1) +
   ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) +
-  geom_line(data = predicted.values, aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25) +
-  labs(color = "Group") +
-  ylim(0, 5) + ggtitle("Reaction Time by Distance and Group")
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
+  geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
+  ylim(0, 5) + ggtitle("Reaction Time by Distance and Group") +
+  theme_bw() + scale_fill_discrete(name = "Group")
 RTplot
