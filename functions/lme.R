@@ -6,6 +6,8 @@ library(ez)
 library(emmeans)
 library(lme4)
 library(lmerTest)
+source('http://psych.colorado.edu/~jclab/R/mcSummaryLm.R')
+library(lmSupport)
 
 JNmaster <- read.csv("pilot data/master_info_excludes/master.csv")
 surveyAll <- read.csv("pilot data/JNPilotSurvey.csv")
@@ -75,14 +77,26 @@ non.int <- glm(response ~ distance, data = nonmusicians, family = "binomial")
 summary(non.int)
 exp(cbind(OR = coef(non.int), confint(non.int)))
 
-#then do it again for RT
+#regression for RT with only correct trials
 masterCorr <- read.csv("pilot data/master_info_excludes/correctTrials.csv")
+masterCorr <- merge(masterCorr, survey)
 
-modelC.RT <- lm(RT ~ 1, data = masterCorr)
-summary(modelC.RT)
-modelA.RT <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorr)
-summary(modelA.RT)
-anova(modelC.RT, modelA.RT)
+#omnibus
+modelc.RT <- lm(RT ~ 1, data = masterCorr)
+mcSummary(modelc.RT)
+model1.RT <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorr)
+mcSummary(model1.RT)
+anova(modelc.RT, model1.RT)
+modelCompare(modelc.RT, model1.RT)
+
+#distance*musician intx
+musicianRT <- masterCorr %>% dplyr::filter(musicianYN == 1)
+musicianRT.lm <- lm(RT ~ distance, data = musicianRT)
+mcSummary(musicianRT.lm)
+
+nonRT <- masterCorr %>% dplyr::filter(musicianYN == 0)
+nonRT.lm <- lm(RT ~ distance, data = nonRT)
+mcSummary(nonRT.lm)
 
 #ggplot for response (+ error)
 respPlot <- ggplot(master,
@@ -99,4 +113,23 @@ respPlot <- ggplot(master,
   scale_color_manual(labels = c("Nonmusicians", "Musicians"), values = c("orange", "purple")) +
   guides(color = guide_legend("Group"))
 respPlot
+
 #ggplot for RT (just correct trials)
+library(effects)
+predicted.values <- effect('distance*musicianYN', model1.RT,
+                           xlevels = list(distance = c(1, 2, 3, 4, 6, 10),
+                                          musicianYN = c(0, 1)),
+                           se = TRUE, confidence.level = .95, typical = mean)
+predicted.values = as.data.frame(predicted.values)
+predicted.values$distance.factor <- factor(predicted.values$distance,
+                                           levels = c(1, 2, 3, 4, 6, 10))
+predicted.values$musicianYN.factor <- factor(predicted.values$musicianYN,
+                                             levels = c(0, 1),
+                                             labels = c("Non-musicians", "Musicians"))
+RTplot <- ggplot(masterCorr, aes(x = distance, y = RT)) +
+  geom_jitter(alpha = .3, color = "gray50", pch = 21, size = 1) +
+  ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) +
+  geom_line(data = predicted.values, aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25) +
+  labs(color = "Group") +
+  ylim(0, 5) + ggtitle("Reaction Time by Distance and Group")
+RTplot
