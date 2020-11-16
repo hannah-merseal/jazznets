@@ -9,8 +9,8 @@ library(lmerTest)
 source('http://psych.colorado.edu/~jclab/R/mcSummaryLm.R')
 library(lmSupport)
 
-JNmaster <- read.csv("pilot data/master_info_excludes/master.csv")
-surveyAll <- read.csv("pilot data/JNPilotSurvey.csv")
+JNmaster <- read.csv("data/master_info_excludes/master.csv")
+surveyAll <- read.csv("data/JNSurvey.csv")
 
 #pull relevant survey information for analysis, rename for consistency
 survey <- surveyAll %>% dplyr::select(participant, musicianYN, EmotionalContent, Contour, Dissonance, 
@@ -102,8 +102,8 @@ mcSummary(nonRT.lm)
 respPlot <- ggplot(master,
                    aes(x = as.factor(distance),
                        y = response,
-                       group = musicianYN,
-                       color = as.factor(musicianYN))) +
+                       group = InstrumentYN,
+                       color = as.factor(InstrumentYN))) +
   stat_summary(fun.y = "mean", geom = "point") +
   stat_summary(fun.y = "mean", geom = "line") +
   stat_summary(fun.data = "mean_se", geom = "errorbar") +
