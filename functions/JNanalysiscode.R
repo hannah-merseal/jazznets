@@ -226,6 +226,7 @@ mcSummary(nonRT.lm)
 masterYes <- master %>% dplyr::filter(distance %in% c(1, 2, 3, 4, 20), response == 1)
 masterNo <- master %>% dplyr::filter(distance %in% c(6, 10), response == 0)
 masterCorrect20 <- merge(masterYes, masterNo, all = TRUE)
+masterCorrect20 <- merge(masterCorrect20, survey)
 
 modelc.RT <- lm(RT ~ 1, data = masterCorrect20)
 mcSummary(modelc.RT)
@@ -259,7 +260,7 @@ RTplot20No <- ggplot(predicted.values, aes(x = distance, y = fit)) +
   ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20)) +
   geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
   geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
-  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 Unrelated Trials Included)") +
+  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 = Unrelated)") +
   theme_bw() + scale_fill_discrete(name = "Group")
 RTplot20No
 
@@ -279,6 +280,6 @@ RTplot20Yes <- ggplot(predicted.values, aes(x = distance, y = fit)) +
   ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20)) +
   geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
   geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
-  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 Related Trials Included)") +
+  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 = Related)") +
   theme_bw() + scale_fill_discrete(name = "Group")
 RTplot20Yes

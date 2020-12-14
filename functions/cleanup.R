@@ -96,10 +96,10 @@ SDResponse.distance20 <- sd(distance20$response)
 
 means <- data.frame(meanRT.distance1, meanRT.distance2, meanRT.distance3, meanRT.distance4, meanRT.distance6, meanRT.distance10, meanRT.distance20, 
                     meanResponse.distance1, meanResponse.distance2, meanResponse.distance3, meanResponse.distance4, meanResponse.distance6, meanResponse.distance10, meanResponse.distance20)
-write.csv(means, "means_all.csv")
+write.csv(means, "means_all_20Yes.csv")
 SD <- data.frame(SDRT.distance1,SDRT.distance2,SDRT.distance3,SDRT.distance4,SDRT.distance6,SDRT.distance10,SDRT.distance20,
                  SDResponse.distance1,SDResponse.distance2,SDResponse.distance3,SDResponse.distance4,SDResponse.distance6,SDResponse.distance10,SDResponse.distance20)
-write.csv(SD, "SD_all.csv")
+write.csv(SD, "SD_all_20Yes.csv")
 
 #calculating % related
 pctunrelated1 <- (nrow(distance1) - nrow(distance1.corr))/nrow(distance1)
@@ -174,10 +174,10 @@ SDResponse.distance20 <- sd(distance20$response)
 
 meansMus <- data.frame(meanRT.distance1, meanRT.distance2, meanRT.distance3, meanRT.distance4, meanRT.distance6, meanRT.distance10, meanRT.distance20, 
                     meanResponse.distance1, meanResponse.distance2, meanResponse.distance3, meanResponse.distance4, meanResponse.distance6, meanResponse.distance10, meanResponse.distance20)
-write.csv(meansMus, "means_musicians.csv")
+write.csv(meansMus, "means_musicians_20Yes.csv")
 SDMus <- data.frame(SDRT.distance1,SDRT.distance2,SDRT.distance3,SDRT.distance4,SDRT.distance6,SDRT.distance10,SDRT.distance20,
                  SDResponse.distance1,SDResponse.distance2,SDResponse.distance3,SDResponse.distance4,SDResponse.distance6,SDResponse.distance10,SDResponse.distance20)
-write.csv(SDMus, "SD_musicians.csv")
+write.csv(SDMus, "SD_musicians_20Yes.csv")
 
 #nonmusicians
 nonmusicians <- musicMaster %>% dplyr::filter(musicianYN == 0) %>%
@@ -226,7 +226,7 @@ meanResponse.distance10 <- mean(distance10$response)
 SDResponse.distance10 <- sd(distance10$response)
 
 distance20 <- nonmusicians %>% dplyr::filter(distance == 20)
-distance20.corr <- distance20 %>% dplyr::filter(response == 0)
+distance20.corr <- distance20 %>% dplyr::filter(response == 1)
 meanRT.distance20 <- mean(distance20.corr$RT)
 SDRT.distance20 <- sd(distance20.corr$RT)
 meanResponse.distance20 <- mean(distance20$response)
@@ -234,9 +234,9 @@ SDResponse.distance20 <- sd(distance20$response)
 
 meansNon <- data.frame(meanRT.distance1, meanRT.distance2, meanRT.distance3, meanRT.distance4, meanRT.distance6, meanRT.distance10, meanRT.distance20, 
                        meanResponse.distance1, meanResponse.distance2, meanResponse.distance3, meanResponse.distance4, meanResponse.distance6, meanResponse.distance10, meanResponse.distance20)
-write.csv(meansNon, "means_nonmusicians.csv")
+write.csv(meansNon, "means_nonmusicians_20Yes.csv")
 SDNon <- data.frame(SDRT.distance1,SDRT.distance2,SDRT.distance3,SDRT.distance4,SDRT.distance6,SDRT.distance10,SDRT.distance20,
                     SDResponse.distance1,SDResponse.distance2,SDResponse.distance3,SDResponse.distance4,SDResponse.distance6,SDResponse.distance10,SDResponse.distance20)
-write.csv(SDNon, "SD_nonmusicians.csv")
+write.csv(SDNon, "SD_nonmusicians_20Yes.csv")
 
 #to do: clean up the above
