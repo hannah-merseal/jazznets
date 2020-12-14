@@ -85,7 +85,7 @@ anova(log.modelC, log.modelA, test = "Chisq")
 exp(cbind(OR = coef(log.modelA), confint(log.modelA)))
 
 #confusion table
-logtable <-  data.frame(observed = master$response,
+logtable <-  data.frame(observed = masterNo20$response,
                         predicted = ifelse(fitted(log.modelA) > .5, 1, 0))
 xtabs(~ observed + predicted, data = logtable)
 
@@ -105,42 +105,55 @@ anova(log.modelC, log.modelA, test = "Chisq")
 exp(cbind(OR = coef(log.modelA), confint(log.modelA)))
 
 #confusion table
-logtable <-  data.frame(observed = master$response,
+logtable <-  data.frame(observed = master1020$response,
                         predicted = ifelse(fitted(log.modelA) > .5, 1, 0))
 xtabs(~ observed + predicted, data = logtable)
 
-
-
-### RESPONSE WITHOUT 20 MUSICIANS/NON ###
-#musician interaction (which is NS) + musician variables
-musicians <- masterNo20 %>% dplyr::filter(musicianYN == 1)
-musician.int <- glm(response ~ distance + hoursWeekListen + hoursWeekListenJazz + 
-                      primaryProficiency + impProficiency +
-                      playHoursNow + impHoursNow + percentImp, data = musicians, family = "binomial")
+#musician:distance interaction
+musicians1020 <- master1020 %>% dplyr::filter(musicianYN == 1)
+musician.int <- glm(response ~ distance, data = musicians1020, family = "binomial")
 summary(musician.int)
 exp(cbind(OR = coef(musician.int), confint(musician.int)))
 
-#nonmusician interaction (NS)
-nonmusicians <- masterNo20 %>% dplyr::filter(musicianYN == 0)
-non.int <- glm(response ~ distance, data = nonmusicians, family = "binomial")
-summary(non.int)
-exp(cbind(OR = coef(non.int), confint(non.int)))
+nonmusicians1020 <- master1020 %>% dplyr::filter(musicianYN == 0)
+nonmusician.int <- glm(response ~ distance, data = nonmusicians1020, family = "binomial")
+summary(nonmusician.int)
+exp(cbind(OR = coef(nonmusician.int), confint(nonmusician.int)))
 
 
+### RESPONSE WITHOUT 20 MUSICIANS ###
+#musician interaction (which is NS) + musician variables
+musiciansNo20 <- masterNo20 %>% dplyr::filter(musicianYN == 1)
+musician.null <- glm(response ~ distance, data = musiciansNo20, family = "binomial")
+musician.int <- glm(response ~ distance +
+                      primaryProficiency + impProficiency + playHoursNow + impHoursNow + 
+                      percentImp, data = musiciansNo20, family = "binomial")
+summary(musician.int)
+anova(musician.null, musician.int, test = "Chisq")
+exp(cbind(OR = coef(musician.int), confint(musician.int)))
 
 ### RESPONSE 10-20 MUSICIANS ###
-musicians <- master1020 %>% dplyr::filter(musicianYN == 1)
-musician.int <- glm(response ~ distance + hoursWeekListen + hoursWeekListenJazz + 
+musicians1020 <- master1020 %>% dplyr::filter(musicianYN == 1)
+musician1020.null <- glm(response ~ distance, data = musicians1020, family = "binomial")
+musician1020.int <- glm(response ~ distance +  
                       primaryProficiency + impProficiency +
-                      playHoursNow + impHoursNow + percentImp, data = musicians, family = "binomial")
-summary(musician.int)
-exp(cbind(OR = coef(musician.int), confint(musician.int)))
+                      playHoursNow + impHoursNow + percentImp, data = musicians1020, family = "binomial")
+anova(musician1020.null, musician1020.int, test = "Chisq")
+summary(musician1020.int)
+exp(cbind(OR = coef(musician1020.int), confint(musician1020.int)))
 
-#nonmusician interaction (NS)
-nonmusicians <- master1020 %>% dplyr::filter(musicianYN == 0)
-non.int <- glm(response ~ distance, data = nonmusicians, family = "binomial")
-summary(non.int)
-exp(cbind(OR = coef(non.int), confint(non.int)))
+### RESPONSE 1-4 ###
+masterRelated <- master %>% dplyr::filter(distance %in% c(1, 2, 3, 4))
+related.null <- glm(response ~ 1, data = masterRelated, family = "binomial")
+related.log <- glm(response ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterRelated, family = "binomial")
+anova(related.null, related.log, test = "Chisq")
+exp(cbind(OR = coef(related.log), confint(related.log)))
+summary(related.log)
+
+logtable <-  data.frame(observed = masterRelated$response,
+                        predicted = ifelse(fitted(log.modelA) > .5, 1, 0))
+xtabs(~ observed + predicted, data = logtable)
+
 
 ##### RESPONSE PLOTS #####
 
@@ -223,6 +236,9 @@ modelCompare(modelc.RT, model1.RT20Yes)
 
 ##### RT PLOTS #####
 #means plot 20 = No
+RTMeans.20No <- ggplot() + theme_bw() +
+  
+
 
 #means plot 20 = Yes
 
@@ -243,7 +259,7 @@ RTplot20No <- ggplot(predicted.values, aes(x = distance, y = fit)) +
   ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20)) +
   geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
   geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
-  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 = No)") +
+  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 Unrelated Trials Included)") +
   theme_bw() + scale_fill_discrete(name = "Group")
 RTplot20No
 
@@ -263,6 +279,6 @@ RTplot20Yes <- ggplot(predicted.values, aes(x = distance, y = fit)) +
   ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20)) +
   geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
   geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
-  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 = Yes)") +
+  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 Related Trials Included)") +
   theme_bw() + scale_fill_discrete(name = "Group")
 RTplot20Yes
