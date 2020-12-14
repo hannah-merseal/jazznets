@@ -214,13 +214,13 @@ anova(modelc.RT, model1.RT20No)
 modelCompare(modelc.RT, model1.RT20No)
 
 #distance*musician intx (NS)
-musicianRT <- masterCorr %>% dplyr::filter(musicianYN == 1)
-musicianRT.lm <- lm(RT ~ distance, data = musicianRT)
-mcSummary(musicianRT.lm)
-
-nonRT <- masterCorr %>% dplyr::filter(musicianYN == 0)
-nonRT.lm <- lm(RT ~ distance, data = nonRT)
-mcSummary(nonRT.lm)
+# musicianRT <- masterCorr %>% dplyr::filter(musicianYN == 1)
+# musicianRT.lm <- lm(RT ~ distance, data = musicianRT)
+# mcSummary(musicianRT.lm)
+# 
+# nonRT <- masterCorr %>% dplyr::filter(musicianYN == 0)
+# nonRT.lm <- lm(RT ~ distance, data = nonRT)
+# mcSummary(nonRT.lm)
 
 ### masterCorrect with 20 == 1
 masterYes <- master %>% dplyr::filter(distance %in% c(1, 2, 3, 4, 20), response == 1)
@@ -235,14 +235,23 @@ mcSummary(model1.RT20Yes)
 anova(modelc.RT, model1.RT20Yes)
 modelCompare(modelc.RT, model1.RT20Yes)
 
+### RT 20 == 1 split 1-4
+masterCorrect20.firsthalf <- masterCorrect20 %>% dplyr::filter(distance %in% c(1, 2, 3, 4))
+modelc.firsthalf <- lm(RT ~ 1, data = masterCorrect20.firsthalf)
+modela.firsthalf <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrect20.firsthalf)
+anova(modelc.firsthalf, modela.firsthalf)
+modelCompare(modelc.firsthalf, modela.firsthalf)
+mcSummary(modela.firsthalf)
+
+### RT 20 == 1 split 4-20
+masterCorrect20.secondhalf <- masterCorrect20 %>% dplyr::filter(distance %in% c(4, 6, 10, 20))
+modelc.secondhalf <- lm(RT ~ 1, data = masterCorrect20.secondhalf)
+modela.secondhalf <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrect20.secondhalf)
+anova(modelc.secondhalf, modela.secondhalf)
+modelCompare(modelc.secondhalf, modela.secondhalf)
+mcSummary(modela.secondhalf)
+
 ##### RT PLOTS #####
-#means plot 20 = No
-RTMeans.20No <- ggplot() + theme_bw() +
-  
-
-
-#means plot 20 = Yes
-
 #ggplot for RT (20 No)
 library(effects)
 predicted.values <- effect('distance*musicianYN', model1.RT20No,
@@ -283,3 +292,43 @@ RTplot20Yes <- ggplot(predicted.values, aes(x = distance, y = fit)) +
   ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 = Related)") +
   theme_bw() + scale_fill_discrete(name = "Group")
 RTplot20Yes
+
+# 20 related 1-4
+predicted.values <- effect('distance*musicianYN', modela.firsthalf,
+                           xlevels = list(distance = c(1, 2, 3, 4),
+                                          musicianYN = c(0, 1)),
+                           se = TRUE, confidence.level = .95, typical = mean)
+predicted.values = as.data.frame(predicted.values)
+predicted.values$distance.factor <- factor(predicted.values$distance,
+                                           levels = c(1, 2, 3, 4))
+predicted.values$musicianYN.factor <- factor(predicted.values$musicianYN,
+                                             levels = c(0, 1),
+                                             labels = c("Non-musicians", "Musicians"))
+RTplot20FirstHalf <- ggplot(predicted.values, aes(x = distance, y = fit)) +
+  geom_jitter(data = masterCorrect20.firsthalf, aes(x = distance, y = RT), alpha = .3, color = "gray50", pch = 21, size = 1) +
+  ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
+  geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
+  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (Distances 1-4)") +
+  theme_bw() + scale_fill_discrete(name = "Group") + xlim(1, 4)
+RTplot20FirstHalf
+
+#20 related more than 4
+predicted.values <- effect('distance*musicianYN', modela.secondhalf,
+                           xlevels = list(distance = c(4, 6, 10, 20),
+                                          musicianYN = c(0, 1)),
+                           se = TRUE, confidence.level = .95, typical = mean)
+predicted.values = as.data.frame(predicted.values)
+predicted.values$distance.factor <- factor(predicted.values$distance,
+                                           levels = c(4, 6, 10, 20))
+predicted.values$musicianYN.factor <- factor(predicted.values$musicianYN,
+                                             levels = c(0, 1),
+                                             labels = c("Non-musicians", "Musicians"))
+RTplot20SecondHalf <- ggplot(predicted.values, aes(x = distance, y = fit)) +
+  geom_jitter(data = masterCorrect20.secondhalf, aes(x = distance, y = RT), alpha = .3, color = "gray50", pch = 21, size = 1) +
+  ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(4, 6, 10, 20)) +
+  geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
+  geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
+  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (Distances 4, 6, 10, 20)") +
+  theme_bw() + scale_fill_discrete(name = "Group") + xlim(4, 20)
+RTplot20SecondHalf
