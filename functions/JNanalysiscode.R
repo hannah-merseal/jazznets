@@ -200,18 +200,32 @@ respPlot10 <- ggplot(master10,
 respPlot10
 
 ##### RT #####
+
 ### masterCorrect with 20 == 0
 masterCorrectLow <- master %>% dplyr::filter(distance < 5, response == 1)
 masterCorrectHigh <- master %>% dplyr::filter(distance >= 5, response == 0)
 masterCorrect <- merge(masterCorrectLow, masterCorrectHigh, all = TRUE)
 
 #omnibus
-modelc.RT <- lm(RT ~ 1, data = masterCorrect)
+modelc.RT <- lm(RT ~ 1, data = masterCorrectNo20)
 mcSummary(modelc.RT)
-model1.RT20No <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorr)
+model1.RT20No <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrectNo20)
 mcSummary(model1.RT20No)
 anova(modelc.RT, model1.RT20No)
 modelCompare(modelc.RT, model1.RT20No)
+
+#RT not including 20, quadratic model
+masterCorrectNo20 <- masterCorrect %>% dplyr::filter(distance < 20)
+masterCorrectNo20$distancesq <- masterCorrectNo20$distance*masterCorrectNo20$distance
+quadModel.RT <- lm(RT ~ distance + distancesq, data = masterCorrectNo20)
+mcSummary(quadModel.RT)
+anova(modelc.RT, quadModel.RT)
+modelCompare(modelc.RT, quadModel.RT)
+
+distancevalues <- seq(0, 10, 1)
+predicted.quad <- predict(quadModel.RT, list(distance=distancevalues, distancesq=distancevalues^2), data = masterCorrectNo20)
+plot(distance, RT, pch = 16, xlab = "Distance", ylab = "RT", cex.lab = 1.3, col = "blue", data = masterCorrectNo20)
+lines(distancevalues, predicted.quad, col = "darkgreen", lwd = 3)
 
 #distance*musician intx (NS)
 # musicianRT <- masterCorr %>% dplyr::filter(musicianYN == 1)
