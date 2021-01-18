@@ -209,7 +209,7 @@ masterCorrect <- merge(masterCorrectLow, masterCorrectHigh, all = TRUE)
 #omnibus
 modelc.RT <- lm(RT ~ 1, data = masterCorrectNo20)
 mcSummary(modelc.RT)
-model1.RT20No <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrectNo20)
+model1.RT20No <- lm(RT ~ distance + musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrectNo20)
 mcSummary(model1.RT20No)
 anova(modelc.RT, model1.RT20No)
 modelCompare(modelc.RT, model1.RT20No)
@@ -217,15 +217,21 @@ modelCompare(modelc.RT, model1.RT20No)
 #RT not including 20, quadratic model
 masterCorrectNo20 <- masterCorrect %>% dplyr::filter(distance < 20)
 masterCorrectNo20$distancesq <- masterCorrectNo20$distance*masterCorrectNo20$distance
-quadModel.RT <- lm(RT ~ distance + distancesq, data = masterCorrectNo20)
+quadModel.RT <- lm(RT ~ distance + distancesq + musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrectNo20)
 mcSummary(quadModel.RT)
 anova(modelc.RT, quadModel.RT)
 modelCompare(modelc.RT, quadModel.RT)
+#compare to linear - quadratic model is definitely a better fit :)
+anova(model1.RT20No, quadModel.RT)
+modelCompare(model1.RT20No, quadModel.RT)
+#quadratic plot - try long format table with gather https://stackoverflow.com/questions/42764028/fitting-a-quadratic-curve-in-ggplot
+quadPlot.RT <- ggplot()
 
-distancevalues <- seq(0, 10, 1)
-predicted.quad <- predict(quadModel.RT, list(distance=distancevalues, distancesq=distancevalues^2), data = masterCorrectNo20)
-plot(distance, RT, pch = 16, xlab = "Distance", ylab = "RT", cex.lab = 1.3, col = "blue", data = masterCorrectNo20)
-lines(distancevalues, predicted.quad, col = "darkgreen", lwd = 3)
+
+
+
+
+
 
 #distance*musician intx (NS)
 # musicianRT <- masterCorr %>% dplyr::filter(musicianYN == 1)
