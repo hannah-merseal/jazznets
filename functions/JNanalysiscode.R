@@ -10,6 +10,7 @@ library(lme4)
 library(lmerTest)
 source('http://psych.colorado.edu/~jclab/R/mcSummaryLm.R')
 library(lmSupport)
+library(mgcv)
 
 JNmaster <- read.csv("data/master_info_excludes/master.csv")
 surveyAll <- read.csv("data/JNSurvey.csv")
@@ -40,6 +41,10 @@ survey <- surveyAll %>% dplyr::select(prolificID, musicianYN, EmotionalContent, 
 
 #MERGE
 master <- merge(JNmaster, survey)
+
+master <- master %>%
+  filter(between(RT, mean(RT, na.rm=TRUE) - (2.5 * sd(RT,na.rm=TRUE)),
+                 mean(RT, na.rm=TRUE) + (2.5* sd(RT, na.rm = TRUE))))
 
 ##### PREDICTORS #####
 # overall listening hours - hoursWeekListen W
@@ -205,6 +210,7 @@ respPlot10
 masterCorrectLow <- master %>% dplyr::filter(distance < 5, response == 1)
 masterCorrectHigh <- master %>% dplyr::filter(distance >= 5, response == 0)
 masterCorrect <- merge(masterCorrectLow, masterCorrectHigh, all = TRUE)
+masterCorrectNo20 <- masterCorrect %>% dplyr::filter(distance < 20)
 
 #omnibus
 modelc.RT <- lm(RT ~ 1, data = masterCorrectNo20)
@@ -215,7 +221,7 @@ anova(modelc.RT, model1.RT20No)
 modelCompare(modelc.RT, model1.RT20No)
 
 #RT not including 20, quadratic model
-masterCorrectNo20 <- masterCorrect %>% dplyr::filter(distance < 20)
+
 masterCorrectNo20$distancesq <- masterCorrectNo20$distance*masterCorrectNo20$distance
 quadModel.RT <- lm(RT ~ distance + distancesq + musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrectNo20)
 mcSummary(quadModel.RT)
@@ -225,12 +231,26 @@ modelCompare(modelc.RT, quadModel.RT)
 anova(model1.RT20No, quadModel.RT)
 modelCompare(model1.RT20No, quadModel.RT)
 #quadratic plot - try long format table with gather https://stackoverflow.com/questions/42764028/fitting-a-quadratic-curve-in-ggplot
-quadPlot.RT <- ggplot()
+
+masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN=="Non-musicians"] <- 0
+masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN=="Musicians"] <- 1
+
+quadPlot.RT <- ggplot(masterCorrectNo20, aes(x = distance, y = RT)) +
+  theme_minimal() +   ggtitle("Reaction Time by Distance & Group") +
+  ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) +
+  geom_jitter(alpha = .3, color = "gray50", pch = 21, size = 1) +
+  stat_smooth(method = 'lm', formula = y ~ poly(x, 2), aes(color = musicianYN, fill = musicianYN)) +
+  scale_color_manual(name = "Group", values = c("#FD6467", "#00A08A")) +
+  scale_fill_manual(name = "Group", values = c("#FD6467", "#00A08A")) +
+  guides(fill = guide_legend(override.aes = list(color = c("#FD6467", "#00A08A"), size = 1)))
+quadPlot.RT
+#add key & recolor geom ribbon
 
 
-
-
-
+#GAM (bad)
+jazz_gam <- gam(RT ~ s(distance, k = 2) + s(musicianYN) + s(hoursWeekListen) + s(hoursWeekListenJazz), data = masterCorrectNo20, method = 'REML')
+summary(jazz_gam)
+gam.check(jazz_gam)
 
 
 #distance*musician intx (NS)
@@ -272,26 +292,26 @@ modelCompare(modelc.secondhalf, modela.secondhalf)
 mcSummary(modela.secondhalf)
 
 ##### RT PLOTS #####
-#ggplot for RT (20 No)
+#ggplot for RT (No 20, quad)
 library(effects)
-predicted.values <- effect('distance*musicianYN', model1.RT20No,
-                           xlevels = list(distance = c(1, 2, 3, 4, 6, 10, 20),
+predicted.values <- effect('distance*musicianYN', quadModel.RT,
+                           xlevels = list(distance = c(1, 2, 3, 4, 6, 10),
                                           musicianYN = c(0, 1)),
                            se = TRUE, confidence.level = .95, typical = mean)
 predicted.values = as.data.frame(predicted.values)
 predicted.values$distance.factor <- factor(predicted.values$distance,
-                                           levels = c(1, 2, 3, 4, 6, 10, 20))
+                                           levels = c(1, 2, 3, 4, 6, 10))
 predicted.values$musicianYN.factor <- factor(predicted.values$musicianYN,
                                              levels = c(0, 1),
                                              labels = c("Non-musicians", "Musicians"))
-RTplot20No <- ggplot(predicted.values, aes(x = distance, y = fit)) +
-  geom_jitter(data = masterCorr, aes(x = distance, y = RT), alpha = .3, color = "gray50", pch = 21, size = 1) +
+RTplot.quad <- ggplot(predicted.values, aes(x = distance, y = fit)) +
+  geom_jitter(data = masterCorrectNo20, aes(x = distance, y = RT), alpha = .3, color = "gray50", pch = 21, size = 1) +
   ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20)) +
   geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
-  geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
-  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 = Unrelated)") +
+  geom_smooth(aes(x = distance, y = fit, color = musicianYN.factor, method = "lm"), size = 1.25, show.legend = FALSE) +
+  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group") +
   theme_bw() + scale_fill_discrete(name = "Group")
-RTplot20No
+RTplot.quad
 
 #ggplot for RT (20 Yes)
 predicted.values <- effect('distance*musicianYN', model1.RT20Yes,
