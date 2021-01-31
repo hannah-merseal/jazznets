@@ -13,10 +13,10 @@ library(lmSupport)
 library(mgcv)
 
 JNmaster <- read.csv("data/master_info_excludes/master.csv")
-surveyAll <- read.csv("data/JNSurvey.csv")
+survey <- read.csv("data/JNSurvey.csv")
 
 #pull relevant survey information for analysis, rename for consistency
-survey <- surveyAll %>% dplyr::select(prolificID, musicianYN, EmotionalContent, Contour, Dissonance, 
+survey <- survey %>% dplyr::select(prolificID, musicianYN, EmotionalContent, Contour, Dissonance, 
                                       IntervalVariety, IntervalSize, ImpliedHarmony, HoursWeekListen, 
                                       HoursWeekListenJazz, InstrumentYN, YearsFormalTraining, 
                                       PrimaryProficiency, YearsFormalImp, ImpProficiency, 
@@ -58,7 +58,6 @@ master <- master %>%
 
 
 ##### RESPONSE #####
-
 ### RESPONSE WITH 20 ###
 #logistic regression with chisq WITH 20
 log.modelC <- glm(response ~ 1, data = master, family = "binomial")
@@ -74,8 +73,6 @@ exp(cbind(OR = coef(log.modelA), confint(log.modelA)))
 logtable <-  data.frame(observed = master$response,
                         predicted = ifelse(fitted(log.modelA) > .5, 1, 0))
 xtabs(~ observed + predicted, data = logtable)
-
-
 
 ### RESPONSE WITHOUT 20 ###
 #logistic regression with chisq WITHOUT 20
@@ -94,38 +91,6 @@ logtable <-  data.frame(observed = masterNo20$response,
                         predicted = ifelse(fitted(log.modelA) > .5, 1, 0))
 xtabs(~ observed + predicted, data = logtable)
 
-
-
-### RESPONSE JUST 10 & 20 ###
-master1020 <- master %>% dplyr::filter(distance %in% c(10, 20))
-
-#logistic regression with chisq JUST 10 & 20
-log.modelC <- glm(response ~ 1, data = master1020, family = "binomial")
-summary(log.modelC)
-log.modelA <- glm(response ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = master1020, family = "binomial")
-summary(log.modelA)
-anova(log.modelC, log.modelA, test = "Chisq")
-
-#converting log odds into odds ratio
-exp(cbind(OR = coef(log.modelA), confint(log.modelA)))
-
-#confusion table
-logtable <-  data.frame(observed = master1020$response,
-                        predicted = ifelse(fitted(log.modelA) > .5, 1, 0))
-xtabs(~ observed + predicted, data = logtable)
-
-#musician:distance interaction
-musicians1020 <- master1020 %>% dplyr::filter(musicianYN == 1)
-musician.int <- glm(response ~ distance, data = musicians1020, family = "binomial")
-summary(musician.int)
-exp(cbind(OR = coef(musician.int), confint(musician.int)))
-
-nonmusicians1020 <- master1020 %>% dplyr::filter(musicianYN == 0)
-nonmusician.int <- glm(response ~ distance, data = nonmusicians1020, family = "binomial")
-summary(nonmusician.int)
-exp(cbind(OR = coef(nonmusician.int), confint(nonmusician.int)))
-
-
 ### RESPONSE WITHOUT 20 MUSICIANS ###
 #musician interaction (which is NS) + musician variables
 musiciansNo20 <- masterNo20 %>% dplyr::filter(musicianYN == 1)
@@ -136,29 +101,6 @@ musician.int <- glm(response ~ distance +
 summary(musician.int)
 anova(musician.null, musician.int, test = "Chisq")
 exp(cbind(OR = coef(musician.int), confint(musician.int)))
-
-### RESPONSE 10-20 MUSICIANS ###
-musicians1020 <- master1020 %>% dplyr::filter(musicianYN == 1)
-musician1020.null <- glm(response ~ distance, data = musicians1020, family = "binomial")
-musician1020.int <- glm(response ~ distance +  
-                      primaryProficiency + impProficiency +
-                      playHoursNow + impHoursNow + percentImp, data = musicians1020, family = "binomial")
-anova(musician1020.null, musician1020.int, test = "Chisq")
-summary(musician1020.int)
-exp(cbind(OR = coef(musician1020.int), confint(musician1020.int)))
-
-### RESPONSE 1-4 ###
-masterRelated <- master %>% dplyr::filter(distance %in% c(1, 2, 3, 4))
-related.null <- glm(response ~ 1, data = masterRelated, family = "binomial")
-related.log <- glm(response ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterRelated, family = "binomial")
-anova(related.null, related.log, test = "Chisq")
-exp(cbind(OR = coef(related.log), confint(related.log)))
-summary(related.log)
-
-logtable <-  data.frame(observed = masterRelated$response,
-                        predicted = ifelse(fitted(log.modelA) > .5, 1, 0))
-xtabs(~ observed + predicted, data = logtable)
-
 
 ##### RESPONSE PLOTS #####
 
@@ -204,7 +146,21 @@ respPlot10 <- ggplot(master10,
   theme_minimal()
 respPlot10
 
+#cool logistic plot
+glm_predicted <- predictvals()
+logPlot <- ggplot(master10, aes(x = distance, y = as.factor(response))) 
 
+
+  stat_smooth(method = "glm", method.args = list(family = "binomial")) +
+  labs(x = "Distance",
+       y = "Response") +
+  scale_color_manual(name = "Legend",
+                       breaks = c("#FD6467", "#00A08A"),
+                       labels = c("Musicians", "Nonmusicians"),
+                       guide = "legend") +
+  scale_x_continuous(limits = c(0,10), breaks = c(1:10)) +
+  scale_y_continuous(limits = c(0,1))
+logPlot
 
 ##### RT #####
 
