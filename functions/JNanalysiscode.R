@@ -199,10 +199,12 @@ respPlot10 <- ggplot(master10,
   labs(x = "Distance",
        y = "Mean Response",
        title = "Mean Response for Distance (No 20), Musicians vs. Nons") +
-  scale_color_manual(labels = c("Nonmusicians", "Musicians"), values = c("blue", "red")) +
+  scale_color_manual(labels = c("Nonmusicians", "Musicians"), values = c("#00A08A", "#FD6467")) + 
   guides(color = guide_legend("Group"))+
-  theme_bw()
+  theme_minimal()
 respPlot10
+
+
 
 ##### RT #####
 
@@ -232,8 +234,8 @@ anova(model1.RT20No, quadModel.RT)
 modelCompare(model1.RT20No, quadModel.RT)
 #quadratic plot - try long format table with gather https://stackoverflow.com/questions/42764028/fitting-a-quadratic-curve-in-ggplot
 
-masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN=="Non-musicians"] <- 0
-masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN=="Musicians"] <- 1
+masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN==0] <- "Non-musicians"
+masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN==1] <- "Musicians"
 
 quadPlot.RT <- ggplot(masterCorrectNo20, aes(x = distance, y = RT)) +
   theme_minimal() +   ggtitle("Reaction Time by Distance & Group") +

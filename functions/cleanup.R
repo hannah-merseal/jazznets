@@ -44,6 +44,13 @@ master <- master %>% dplyr::filter(participant != "JN_24") %>%
 
 write.csv(master, "master.csv")
 
+survey <- read.csv("data/JNSurvey.csv")
+participantInfo <- merge(survey, info, py = "prolificID")
+participantInfo <- participantInfo %>% dplyr::filter(participant != "JN_24") %>%
+  filter(participant != "JN_43") %>%
+  filter(participant != "JN_47")
+write.csv(participantInfo, "participants.csv")
+
 #find means & SD for each distance
 distance1 <- master %>% dplyr::filter(distance == 1)
 distance1.corr <- distance1 %>% dplyr::filter(response == 1)
