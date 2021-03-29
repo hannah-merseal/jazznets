@@ -179,7 +179,6 @@ anova(modelc.RT, model1.RT20No)
 modelCompare(modelc.RT, model1.RT20No)
 
 #RT not including 20, quadratic model
-
 masterCorrectNo20$distancesq <- masterCorrectNo20$distance*masterCorrectNo20$distance
 quadModel.RT <- lm(RT ~ distance + distancesq + musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrectNo20)
 mcSummary(quadModel.RT)
@@ -190,7 +189,7 @@ anova(model1.RT20No, quadModel.RT)
 modelCompare(model1.RT20No, quadModel.RT)
 #quadratic plot - try long format table with gather https://stackoverflow.com/questions/42764028/fitting-a-quadratic-curve-in-ggplot
 
-masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN==0] <- "Non-musicians"
+masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN=="Non-musicians"] <- "Nonmusicians"
 masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN==1] <- "Musicians"
 
 quadPlot.RT <- ggplot(masterCorrectNo20, aes(x = distance, y = RT)) +
@@ -330,3 +329,4 @@ RTplot20SecondHalf <- ggplot(predicted.values, aes(x = distance, y = fit)) +
   ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (Distances 4, 6, 10, 20)") +
   theme_bw() + scale_fill_discrete(name = "Group") + xlim(4, 20)
 RTplot20SecondHalf
+
