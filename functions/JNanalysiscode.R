@@ -9,7 +9,7 @@ library(emmeans)
 library(lme4)
 library(lmerTest)
 source('http://psych.colorado.edu/~jclab/R/mcSummaryLm.R')
-library(lmSupport)
+#library(lmSupport)
 library(mgcv)
 
 JNmaster <- read.csv("data/master_info_excludes/master.csv")
@@ -62,7 +62,7 @@ master <- master %>%
 #logistic regression with chisq WITH 20
 log.modelC <- glm(response ~ 1, data = master, family = "binomial")
 summary(log.modelC)
-log.modelA <- glm(response ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = master, family = "binomial")
+log.modelA <- glm(response ~ distance*musicianYN, data = master, family = "binomial")
 summary(log.modelA)
 anova(log.modelC, log.modelA, test = "Chisq")
 
@@ -79,7 +79,7 @@ xtabs(~ observed + predicted, data = logtable)
 masterNo20 <- master %>% dplyr::filter(distance != 20)
 log.modelC <- glm(response ~ 1, data = masterNo20, family = "binomial")
 summary(log.modelC)
-log.modelA <- glm(response ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterNo20, family = "binomial")
+log.modelA <- glm(response ~ distance*musicianYN, data = masterNo20, family = "binomial")
 summary(log.modelA)
 anova(log.modelC, log.modelA, test = "Chisq")
 
@@ -180,7 +180,7 @@ modelCompare(modelc.RT, model1.RT20No)
 
 #RT not including 20, quadratic model
 masterCorrectNo20$distancesq <- masterCorrectNo20$distance*masterCorrectNo20$distance
-quadModel.RT <- lm(RT ~ distance + distancesq + musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrectNo20)
+quadModel.RT <- lm(RT ~ distance + distancesq + musicianYN, data = masterCorrectNo20)
 mcSummary(quadModel.RT)
 anova(modelc.RT, quadModel.RT)
 modelCompare(modelc.RT, quadModel.RT)
@@ -189,13 +189,12 @@ anova(model1.RT20No, quadModel.RT)
 modelCompare(model1.RT20No, quadModel.RT)
 #quadratic plot - try long format table with gather https://stackoverflow.com/questions/42764028/fitting-a-quadratic-curve-in-ggplot
 
-masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN=="Non-musicians"] <- "Nonmusicians"
+masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN==0] <- "Nonmusicians"
 masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN==1] <- "Musicians"
 
 quadPlot.RT <- ggplot(masterCorrectNo20, aes(x = distance, y = RT)) +
   theme_minimal() +   ggtitle("Reaction Time by Distance & Group") +
   ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) +
-  geom_jitter(alpha = .3, color = "gray50", pch = 21, size = 1) +
   stat_smooth(method = 'lm', formula = y ~ poly(x, 2), aes(color = musicianYN, fill = musicianYN)) +
   scale_color_manual(name = "Group", values = c("#FD6467", "#00A08A")) +
   scale_fill_manual(name = "Group", values = c("#FD6467", "#00A08A")) +
@@ -330,3 +329,4 @@ RTplot20SecondHalf <- ggplot(predicted.values, aes(x = distance, y = fit)) +
   theme_bw() + scale_fill_discrete(name = "Group") + xlim(4, 20)
 RTplot20SecondHalf
 
+#reversed stimuli
