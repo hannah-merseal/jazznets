@@ -60,3 +60,16 @@ CorrMatrix.coeff <- CorrMatrix.rcorr$r %>%
   round(2)
 CorrMatrix.p <- CorrMatrix.rcorr$P %>%
   round(3)
+
+#Figure 2 - degree distribution
+pitch <- read.csv("figs/WJDpitch.csv")
+Fig2Hist <- pitch %>%
+  ggplot(aes(x = degree)) +
+  geom_histogram(binwidth = 1, fill = "#90D4CC", color="#e9ecef") +
+  scale_y_log10() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        text = element_text(size = 20)) +
+  annotation_logticks(sides = "l") +
+  xlab("Degree") +
+  ylab("Frequency")

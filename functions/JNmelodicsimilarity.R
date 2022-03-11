@@ -14,12 +14,14 @@ stimuliStats <- frequencycomb %>%
     sd = sd(frequency)
   )
 
-#frequency boxplot
-freqboxplot <- ggplot(frequencycomb, aes(x = factor(distance), y = frequency, fill = factor(distance))) +
+##### FIGURE 4 #####
+figure4 <- ggplot(frequencycomb, aes(x = factor(distance), y = frequency, fill = factor(distance))) +
   geom_boxplot(show.legend = FALSE) +
-  theme_bw() +
   xlab("Distance") +
-  ylab("Frequency") 
+  ylab("Frequency") +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        text = element_text(size = 20))
 
 freq.aov <- aov(frequency ~ factor(distance), data = frequencycomb)
 summary(freq.aov)

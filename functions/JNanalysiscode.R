@@ -15,6 +15,13 @@ library(mgcv)
 JNmaster <- read.csv("data/master_info_excludes/master.csv")
 survey <- read.csv("data/JNSurvey.csv")
 
+All20No <- read.csv("data/means/means_all_20No.csv")
+Musicians20No <- read.csv("data/means/means_musicians_20No.csv")
+Nonmusicians20No <- read.csv("data/means/means_nonmusicians_20No.csv")
+All20Yes <- read.csv("data/means/means_all_20Yes.csv")
+Musicians20Yes <- read.csv("data/means/means_musicians_20Yes.csv")
+Nonmusicians20Yes <- read.csv("data/means/means_nonmusicians_20Yes.csv")
+
 #pull relevant survey information for analysis, rename for consistency
 survey <- survey %>% dplyr::select(prolificID, musicianYN, EmotionalContent, Contour, Dissonance, 
                                       IntervalVariety, IntervalSize, ImpliedHarmony, HoursWeekListen, 
@@ -55,7 +62,18 @@ master <- master %>%
 # improv hours - impHoursNow W*
 # percent improv played - percentImp W
 
-
+##### FIGURE 2 #####
+pitch <- read.csv("figs/WJDpitch.csv")
+Fig2Hist <- pitch %>%
+  ggplot(aes(x = degree)) +
+  geom_histogram(binwidth = 1, fill = "#90D4CC", color="#e9ecef") +
+  scale_y_log10() +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        text = element_text(size = 20)) +
+  annotation_logticks(sides = "l") +
+  xlab("Degree") +
+  ylab("Frequency")
 
 ##### RESPONSE #####
 ### RESPONSE WITH 20 ###
@@ -121,7 +139,7 @@ respPlot <- ggplot(master,
   theme_bw()
 respPlot
 
-#response but without 20
+##### FIGURE 6 #####
 master10 <- master %>% dplyr::filter(distance != 20)
 
 log.modelC10 <- glm(response ~ 1, data = master10, family = "binomial")
@@ -146,7 +164,7 @@ respPlot10 <- ggplot(master10,
   theme_minimal()
 respPlot10
 
-#cool logistic plot
+#cool logistic plot - not using
 glm_predicted <- predictvals()
 logPlot <- ggplot(master10, aes(x = distance, y = as.factor(response))) 
 
@@ -187,68 +205,49 @@ modelCompare(modelc.RT, quadModel.RT)
 #compare to linear - quadratic model is definitely a better fit :)
 anova(model1.RT20No, quadModel.RT)
 modelCompare(model1.RT20No, quadModel.RT)
-#quadratic plot - try long format table with gather https://stackoverflow.com/questions/42764028/fitting-a-quadratic-curve-in-ggplot
+
+##### FIGURE 6 #####
+
+pd <- position_dodge(0.1)
+pdd <- position_dodge(0.2)
+
+Figure6A <- ggplot() + theme_minimal() +
+  geom_line(data = Musicians20No, aes(x = distance, y = meanRT, color = "#FD6467")) +
+  geom_errorbar(data = Musicians20No, aes(x = distance, ymin = meanRT - SERT, ymax = meanRT + SERT), inherit.aes = FALSE, color = "#FD6467") +
+  geom_line(data = Nonmusicians20No, aes(x = distance, y = meanRT, color = "#00A08A")) +
+  geom_errorbar(data = Nonmusicians20No, aes(x = distance, ymin = meanRT - SERT, ymax = meanRT + SERT), inherit.aes = FALSE, color = "#00A08A", position = pdd) +
+  geom_ribbon() +
+  labs(x = "Distance",
+       y = "Mean Reaction Time (seconds)",
+       colour = "Legend") +
+  scale_color_identity(name = "Legend",
+                       breaks = c("#FD6467", "#00A08A"),
+                       labels = c("Musicians", "Nonmusicians"),
+                       guide = "legend") +
+  scale_x_continuous(limits = c(0,10.5), breaks = c(1,2,3,4,5,6,7,8,9,10)) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        text = element_text(size = 20))
 
 masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN==0] <- "Nonmusicians"
 masterCorrectNo20$musicianYN[masterCorrectNo20$musicianYN==1] <- "Musicians"
 
-quadPlot.RT <- ggplot(masterCorrectNo20, aes(x = distance, y = RT)) +
-  theme_minimal() +   ggtitle("Reaction Time by Distance & Group") +
+Figure6B <- ggplot(masterCorrectNo20, aes(x = distance, y = RT)) +
   ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10)) +
   stat_smooth(method = 'lm', formula = y ~ poly(x, 2), aes(color = musicianYN, fill = musicianYN)) +
-  scale_color_manual(name = "Group", values = c("#FD6467", "#00A08A")) +
-  scale_fill_manual(name = "Group", values = c("#FD6467", "#00A08A")) +
-  guides(fill = guide_legend(override.aes = list(color = c("#FD6467", "#00A08A"), size = 1)))
-quadPlot.RT
-#add key & recolor geom ribbon
+  scale_color_manual(values = c("#FD6467", "#00A08A")) +
+  scale_fill_manual(values = c("#FD6467", "#00A08A")) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        text = element_text(size = 20), legend.position = "none")
 
+library(patchwork)
 
-#GAM (bad)
-jazz_gam <- gam(RT ~ s(distance, k = 2) + s(musicianYN) + s(hoursWeekListen) + s(hoursWeekListenJazz), data = masterCorrectNo20, method = 'REML')
-summary(jazz_gam)
-gam.check(jazz_gam)
+Figure6 <- (Figure6A/Figure6B) + plot_annotation(tag_levels = 'A') &
+  theme(plot.tag.position = 'topright')
 
+##### OLD FIGURE 7 #####
 
-#distance*musician intx (NS)
-# musicianRT <- masterCorr %>% dplyr::filter(musicianYN == 1)
-# musicianRT.lm <- lm(RT ~ distance, data = musicianRT)
-# mcSummary(musicianRT.lm)
-# 
-# nonRT <- masterCorr %>% dplyr::filter(musicianYN == 0)
-# nonRT.lm <- lm(RT ~ distance, data = nonRT)
-# mcSummary(nonRT.lm)
-
-### masterCorrect with 20 == 1
-masterYes <- master %>% dplyr::filter(distance %in% c(1, 2, 3, 4, 20), response == 1)
-masterNo <- master %>% dplyr::filter(distance %in% c(6, 10), response == 0)
-masterCorrect20 <- merge(masterYes, masterNo, all = TRUE)
-masterCorrect20 <- merge(masterCorrect20, survey)
-
-modelc.RT <- lm(RT ~ 1, data = masterCorrect20)
-mcSummary(modelc.RT)
-model1.RT20Yes <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrect20)
-mcSummary(model1.RT20Yes)
-anova(modelc.RT, model1.RT20Yes)
-modelCompare(modelc.RT, model1.RT20Yes)
-
-### RT 20 == 1 split 1-4
-masterCorrect20.firsthalf <- masterCorrect20 %>% dplyr::filter(distance %in% c(1, 2, 3, 4))
-modelc.firsthalf <- lm(RT ~ 1, data = masterCorrect20.firsthalf)
-modela.firsthalf <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrect20.firsthalf)
-anova(modelc.firsthalf, modela.firsthalf)
-modelCompare(modelc.firsthalf, modela.firsthalf)
-mcSummary(modela.firsthalf)
-
-### RT 20 == 1 split 4-20
-masterCorrect20.secondhalf <- masterCorrect20 %>% dplyr::filter(distance %in% c(4, 6, 10, 20))
-modelc.secondhalf <- lm(RT ~ 1, data = masterCorrect20.secondhalf)
-modela.secondhalf <- lm(RT ~ distance*musicianYN + hoursWeekListen + hoursWeekListenJazz, data = masterCorrect20.secondhalf)
-anova(modelc.secondhalf, modela.secondhalf)
-modelCompare(modelc.secondhalf, modela.secondhalf)
-mcSummary(modela.secondhalf)
-
-##### RT PLOTS #####
-#ggplot for RT (No 20, quad)
 library(effects)
 predicted.values <- effect('distance*musicianYN', quadModel.RT,
                            xlevels = list(distance = c(1, 2, 3, 4, 6, 10),
@@ -260,73 +259,10 @@ predicted.values$distance.factor <- factor(predicted.values$distance,
 predicted.values$musicianYN.factor <- factor(predicted.values$musicianYN,
                                              levels = c(0, 1),
                                              labels = c("Non-musicians", "Musicians"))
-RTplot.quad <- ggplot(predicted.values, aes(x = distance, y = fit)) +
+quadPlot.RT <- ggplot(predicted.values, aes(x = distance, y = fit)) +
   geom_jitter(data = masterCorrectNo20, aes(x = distance, y = RT), alpha = .3, color = "gray50", pch = 21, size = 1) +
   ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20)) +
   geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
   geom_smooth(aes(x = distance, y = fit, color = musicianYN.factor, method = "lm"), size = 1.25, show.legend = FALSE) +
   ylim(0, 3) + ggtitle("Reaction Time by Distance and Group") +
   theme_bw() + scale_fill_discrete(name = "Group")
-RTplot.quad
-
-#ggplot for RT (20 Yes)
-predicted.values <- effect('distance*musicianYN', model1.RT20Yes,
-                           xlevels = list(distance = c(1, 2, 3, 4, 6, 10, 20),
-                                          musicianYN = c(0, 1)),
-                           se = TRUE, confidence.level = .95, typical = mean)
-predicted.values = as.data.frame(predicted.values)
-predicted.values$distance.factor <- factor(predicted.values$distance,
-                                           levels = c(1, 2, 3, 4, 6, 10, 20))
-predicted.values$musicianYN.factor <- factor(predicted.values$musicianYN,
-                                             levels = c(0, 1),
-                                             labels = c("Non-musicians", "Musicians"))
-RTplot20Yes <- ggplot(predicted.values, aes(x = distance, y = fit)) +
-  geom_jitter(data = masterCorr, aes(x = distance, y = RT), alpha = .3, color = "gray50", pch = 21, size = 1) +
-  ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20)) +
-  geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
-  geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
-  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (20 = Related)") +
-  theme_bw() + scale_fill_discrete(name = "Group")
-RTplot20Yes
-
-# 20 related 1-4
-predicted.values <- effect('distance*musicianYN', modela.firsthalf,
-                           xlevels = list(distance = c(1, 2, 3, 4),
-                                          musicianYN = c(0, 1)),
-                           se = TRUE, confidence.level = .95, typical = mean)
-predicted.values = as.data.frame(predicted.values)
-predicted.values$distance.factor <- factor(predicted.values$distance,
-                                           levels = c(1, 2, 3, 4))
-predicted.values$musicianYN.factor <- factor(predicted.values$musicianYN,
-                                             levels = c(0, 1),
-                                             labels = c("Non-musicians", "Musicians"))
-RTplot20FirstHalf <- ggplot(predicted.values, aes(x = distance, y = fit)) +
-  geom_jitter(data = masterCorrect20.firsthalf, aes(x = distance, y = RT), alpha = .3, color = "gray50", pch = 21, size = 1) +
-  ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(1, 2, 3, 4)) +
-  geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
-  geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
-  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (Distances 1-4)") +
-  theme_bw() + scale_fill_discrete(name = "Group") + xlim(1, 4)
-RTplot20FirstHalf
-
-#20 related more than 4
-predicted.values <- effect('distance*musicianYN', modela.secondhalf,
-                           xlevels = list(distance = c(4, 6, 10, 20),
-                                          musicianYN = c(0, 1)),
-                           se = TRUE, confidence.level = .95, typical = mean)
-predicted.values = as.data.frame(predicted.values)
-predicted.values$distance.factor <- factor(predicted.values$distance,
-                                           levels = c(4, 6, 10, 20))
-predicted.values$musicianYN.factor <- factor(predicted.values$musicianYN,
-                                             levels = c(0, 1),
-                                             labels = c("Non-musicians", "Musicians"))
-RTplot20SecondHalf <- ggplot(predicted.values, aes(x = distance, y = fit)) +
-  geom_jitter(data = masterCorrect20.secondhalf, aes(x = distance, y = RT), alpha = .3, color = "gray50", pch = 21, size = 1) +
-  ylab("Reaction Time (seconds)") + scale_x_continuous("Distance", c(4, 6, 10, 20)) +
-  geom_ribbon(aes(ymin = lower, ymax = upper, fill = musicianYN.factor), alpha = 0.2) +
-  geom_line(aes(x = distance, y = fit, color = musicianYN.factor), size = 1.25, show.legend = FALSE) +
-  ylim(0, 3) + ggtitle("Reaction Time by Distance and Group (Distances 4, 6, 10, 20)") +
-  theme_bw() + scale_fill_discrete(name = "Group") + xlim(4, 20)
-RTplot20SecondHalf
-
-#reversed stimuli
