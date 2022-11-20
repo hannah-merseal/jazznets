@@ -29,7 +29,7 @@ JNstats <- function(){
     subject <- subject %>% dplyr::select(participant, prolificID, trial, audioStim, response, RT) %>%
       separate(audioStim, into = c(NA, "audioStim"), sep = "/") %>%
       separate(audioStim, into = c("audioStim", NA), sep = ".wav") %>%
-      separate(audioStim, into = c("distance", "stimNumber"), sep = "_")
+      separate(audioStim, into = c("distance", "stimNumber", "rev"), sep = "_")
     
     #remove trials with RT less than 250ms or +/- 2.5 SD away from mean for each distance, save # removed
     subject <- subject %>% dplyr::filter(RT > .250) %>% 
@@ -47,10 +47,10 @@ JNstats <- function(){
     message <- paste("Participant", i, "is filtered!", sep = " ")
     print(message)
   }
-  write.csv(info, "~/hannah-merseal/jazznets/data/master_info_excludes/info.csv")
+  write.csv(info, "~/hannah-merseal/jazznets/data/master_with_rev/info.csv")
   message2 <- paste("Info written to file")
   print(message2)
-  write.csv(means, "~/hannah-merseal/jazznets/data/master_info_excludes/means.csv")
+  write.csv(means, "~/hannah-merseal/jazznets/data/master_with_rev/means.csv")
   message3 <- paste("Means written to file")
   print(message3)
 }

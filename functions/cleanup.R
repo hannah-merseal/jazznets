@@ -19,14 +19,14 @@ info <- read.csv("data/master_info_excludes/info.csv")
 #merge all participant files to one big dataframe
 list_of_files <- list.files(path = "~/hannah-merseal/jazznets/data/filtered",
                             full.names = TRUE)
-master <- list_of_files %>%
+master_rev <- list_of_files %>%
   setNames(nm = .) %>%
   map_df(~read_csv(.x, col_types = cols(), col_names = TRUE), .id = "file_name")
 
-master <- master %>% dplyr::select(participant, trial, distance, stimNumber, response, RT)
+master_rev <- master_rev %>% dplyr::select(participant, trial, distance, stimNumber, rev, response, RT)
 
 #pilot - for participants with <.50 on repeat agreement from info, delete from means and master
-master <- merge(master, info, by = "participant")
+master_rev <- merge(master_rev, info, by = "participant")
 #excludedAgreement <- master %>% dplyr::filter(repeatAgree < .5)
 #write.csv(excludedAgreement, "excludedAgreement.csv")
 
@@ -37,12 +37,12 @@ master <- merge(master, info, by = "participant")
 #   select(participant, trial, distance, stimNumber, response, RT, NRemoved, repeatAgree)
 
 #exclusions
-master <- master %>% dplyr::filter(participant != "JN_24") %>%
+master_rev <- master_rev %>% dplyr::filter(participant != "JN_24") %>%
   filter(participant != "JN_43") %>%
   filter(participant != "JN_47") %>%
-  select(prolificID, participant, trial, distance, stimNumber, response, RT)
+  select(prolificID, participant, trial, distance, stimNumber, rev, response, RT)
 
-write.csv(master, "master.csv")
+write.csv(master_rev, "master_rev.csv")
 
 survey <- read.csv("data/JNSurvey.csv")
 participantInfo <- merge(survey, info, py = "prolificID")
